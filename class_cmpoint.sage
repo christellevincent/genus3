@@ -70,3 +70,161 @@ class CMPoint:
         M =[A, B, C, D, E, F]
         self._period_matrix = M
         return self._period_matrix
+        
+        
+    def all_thetas(self, start_bound = 20, prec = 664, bound = True):
+        """
+        if bound is set to true, uses theta_with_bound for each theta characteristic. if bound is set to false, uses theta_without_bound.
+        """
+        try:
+            period_matrix = self._period_matrix
+        else:
+            period_matrix = self.period_matrix()
+
+        all_evens = [[[0,0,0],[0,0,0]],[[1,0,0],[0,0,0]],[[0,1,0],[0,0,0]],[[0,0,1],[0,0,0]],[[0,0,1],[1,0,0]],[[0,0,1],[0,1,0]],[[1,1,0],[0,0,0]],[[1,0,1],[0,0,0]],[[0,1,1],[0,0,0]],[[0,0,0],[1,0,1]],[[0,0,0],[0,1,1]],[[0,0,0],[1,1,0]],[[1,1,1],[0,0,0]],[[0,0,0],[1,1,1]],[[0,1,1],[1,0,0]],[[1,0,1],[0,1,0]],[[1,1,0],[0,0,1]],[[0,1,0],[1,0,1]],[[0,0,1],[1,1,0]],[[1,0,0],[0,1,1]],[[1,0,1],[1,0,1]],[[1,1,0],[1,1,0]],[[0,1,1],[0,1,1]],[[1,0,1],[1,1,1]],[[1,1,0],[1,1,1]],[[1,1,1],[0,1,1]],[[1,1,1],[1,0,1]],[[1,1,1],[1,1,0]],[[0,1,1],[1,1,1]],[[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]],[[0,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,0,1]],[[0,1,0],[0,0,1]],[[0,1,0],[1,0,0]]]
+
+        all_values = []
+
+        for even in all_evens:
+            if bound = True:
+                all_values.append([even, theta_with_bound(period_matrix,even[0],even[1],start_bound,prec)])
+            elif bound = False:
+                all_values.append([even, theta_without_bound(period_matrix,even[0],even[1],start_bound,False,prec)])
+                
+        self._all_thetas = all_values
+        return self._all_thetas
+        
+    def vanishing_char(self, bound = True, epsilon = 10.^(-2)):
+        """
+        inputs:
+        bound is passed to all_thetas
+        epsilon can be changed depending on what value one wants to consider to be "zero"
+        outputs:
+        if the period matrix is plane quartic, returns None
+        if the period matrix is hyperelliptic, returns the theta characteristic "delta" such that theta[delta](Z) = 0
+        if there are more than one vanishing characteristics, raises an error
+        "
+        count = 0
+        try:
+            period_matrix = self._period_matrix
+        except:
+            period_matrix = self.period_matrix()
+            
+        try:
+            all_values = self._all_thetas
+        except:
+            all_values = self.all_thetas(period_matrix, prec = self._prec, bound = bound)
+        
+        for value in all_values:
+            if value[1].abs() < epsilon:
+                count += 1
+        if count == 0:
+            return None
+        elif count > 1:
+            raise TypeError('The entries of this period matrix are too large, the theta functions don't converge well')
+        elif count == 1:
+            for value in all_values:
+                if value[1].abs() < epsilon:
+                    self._vanishing_char = value[0]
+                    return self._vanishing_char
+                    
+    def eta_dict(self, bound = True):
+        """
+        bound is passed to all_thetas (ultimately) True is theta_with_bound and False is theta_without_bound
+        returns a dictionary giving values eta_1, eta_2, ... eta_7 for an eta-map associated to the period matrix computed for this cm point
+        """
+        try:
+            vanishing_char = self._vanishing_char
+        except:
+            vanishing_char = self.vanishing_char(bound = bound)
+        if vanishing_char == None:
+            raise TypeError('This is a plane quartic Jacobian')
+        else:
+            delta = matrix(GF(2),[[vanishing_char[0][0]],[vanishing_char[0][1]],[vanishing_char[0][2]],[vanishing_char[1][0]],[vanishing_char[1][1]],[vanishing_char[1][2]]])
+                    
+        if delta == matrix(GF(2)):
+            self._eta_dict = eta_bar
+            return self._eta_dict
+        else:
+            delta.set_immutable()
+            M = pairs[delta]
+            self._eta_dict = {1: M*mumford_eta[1], 2: M*mumford_eta[2], 3: M*mumford_eta[3], 4: M*mumford_eta[4], 5:M*mumford_eta[5], 6: M*mumford_eta[6], 7:M*mumford_eta[7]}
+            return self._eta_dict
+            
+    def U_set(self, bound = True):
+        """
+        returns U = {2, 4, 6} if delta is non zero and U = {1, 2, 3, 4, 5, 6, 7} if delta is zero (infinity is implicitly in both sets)
+        """
+        try:
+            vanishing_char = self._vanishing_char
+        except:
+            vanishing_char = self.vanishing_char(bound = bound)
+        if vanishing_char == None:
+            raise TypeError('This is a plane quartic Jacobian')
+        else:
+            delta = matrix(GF(2),[[vanishing_char[0][0]],[vanishing_char[0][1]],[vanishing_char[0][2]],[vanishing_char[1][0]],[vanishing_char[1][1]],[vanishing_char[1][2]]])
+            
+        if delta == matrix(GF(2)):
+            self._U_set = Set([1,2,3,4,5,6,7])
+            return self._U_set
+        else:
+            self._U_set = Set([2,4,6])
+            return self._U_set
+
+
+    def one_rosenhain_coeff(self, j, prec = 664, bound = True):
+        """
+        This function computes the Rosenhain coefficient j, with 3 <= j <= 7. We assume a1 = 0, a2 = 1. Three values are computed, for the three ways in which you can split the set in Takase's paper. This serves as an additional check that the period matrix is truly hyperelliptic.
+        """
+        try:
+            eta_dict = self._eta_dict
+        except:
+            eta_dict = self.eta_dict(bound = bound)
+        try:
+            U = self._U_set
+        except:
+            U = self.U_set(prec = prec, bound = bound)
+        try:
+            all_values = self._all_thetas
+        except:
+            all_values = self.all_thetas(prec = prec, bound = bound)
+
+        S = Set([1,2,j])
+        Y = B.difference(S)
+        X = Y.subsets(2)
+
+        ajvec = []
+        # we introduce an auxiliary variable a, this only makes it so we compute the value for the decomposition given by V and W once (rather than twice, for V and W interchanged)
+        if (j >= 3) and (j <= 6):
+            a = j + 1
+        elif j == 7:
+            a = 3
+        else:
+            raise ValueError('j is not between 3 and 7 inclusively')
+
+        for V in X:
+        if a in V:
+            W = Y.difference(V)
+            setA = U.symmetric_difference(V.union(Set([1,2])))
+            setB = U.symmetric_difference(W.union(Set([1,2])))
+            setC = U.symmetric_difference(V.union(Set([1,j])))
+            setD = U.symmetric_difference(W.union(Set([1,j])))
+            A = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setA,eta_dict))
+            B = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setB,eta_dict))
+            C = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setC,eta_dict))
+            D = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setD,eta_dict))
+            aj=((D*C)^2)/((A*B)^2)
+            ajvec.append(aj)
+        return ajvec
+        
+    def all_rosenhain_coeffs(self, prec = 664, bound = True):
+        """
+        returns all of the vectors of Rosenhain coefficients
+        """
+        all_coeffs = []
+        for j in range(3,8):
+            all_coeffs.append(self.one_rosenhain_coeff(j,prec = prec, bound = bound)
+        return all_coeffs
+        
+        
+B = Set([1,2,3,4,5,6,7])

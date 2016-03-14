@@ -4,8 +4,6 @@
 
 """
 
-print 'heyoyo'
-
 def theta_with_bound(period_matrix_entries, vec1, vec2, bound, prec = 664):
     """
     INPUT:
@@ -19,6 +17,7 @@ def theta_with_bound(period_matrix_entries, vec1, vec2, bound, prec = 664):
     """
     a, b, c, d, e, f= period_matrix_entries
     dig = floor(RR(prec * log(2,10)))
+    
     S =  'A = %s;'%a
     S += 'B = %s;'%b
     S += 'C = %s;'%c
@@ -27,8 +26,6 @@ def theta_with_bound(period_matrix_entries, vec1, vec2, bound, prec = 664):
     S += 'F = %s;'%f
     S += 'bound = %s;' %bound
     S += 'dig = %s;' %dig
-
-    t1=cputime()
     S +='default(realprecision,dig); \
     thetaval(del,eps,a,b,c,d,e,f, B)= \
     {s=0; t=0; \
@@ -55,15 +52,11 @@ def theta_with_bound(period_matrix_entries, vec1, vec2, bound, prec = 664):
     V+= 'Vec2=[v4,v5,v6];'
     V+= 'thetan=thetaval(Vec1,Vec2,A,B,C,D,E,F,bound);'
     gp(V)
-    t2 = cputime()
-    #print 'sage time: ', t2-t1
-    #print "gp time? : ", gp.eval('##')
     theta=gp.eval('thetan')
     Cec=ComplexField(prec)
-    #print Cec(theta)
     return Cec(theta)
 
-def theta_without_bound(period_matrix_entries, vec1, vec2, start_bound = 20, check = False, prec = 53):
+def theta_without_bound(period_matrix_entries, vec1, vec2, start_bound = 20, check = False, prec = 664):
     """
     input:
     period matrix entries (as a tuple of six entries)
@@ -80,134 +73,65 @@ def theta_without_bound(period_matrix_entries, vec1, vec2, start_bound = 20, che
     """
 
     values = []
-    a=theta_with_bound(period_matrix_entries, vec1, vec2, start_bound, prec)
-    values.append(a)
+    values.append(theta_with_bound(period_matrix_entries, vec1, vec2, start_bound, prec))
     iterates = 0
     equality = False
     while equality == False:
         iterates += 1
-        a=theta_with_bound(period_matrix_entries, vec1, vec2, start_bound+20*iterates, prec)
-        values.append(a)
+        values.append(theta_with_bound(period_matrix_entries, vec1, vec2, start_bound+20*iterates, prec))
         if compare(values[iterates],values[iterates-1]):
             equality = True
     return values[iterates]
 
 
-def all_thetas(period_matrix,start_bound =20, prec = 664):
-
-    all_evens = [[[0,0,0],[0,0,0]],[[1,0,0],[0,0,0]],[[0,1,0],[0,0,0]],[[0,0,1],[0,0,0]],[[0,0,1],[1,0,0]],[[0,0,1],[0,1,0]],[[1,1,0],[0,0,0]],[[1,0,1],[0,0,0]],[[0,1,1],[0,0,0]],[[0,0,0],[1,0,1]],[[0,0,0],[0,1,1]],[[0,0,0],[1,1,0]],[[1,1,1],[0,0,0]],[[0,0,0],[1,1,1]],[[0,1,1],[1,0,0]],[[1,0,1],[0,1,0]],[[1,1,0],[0,0,1]],[[0,1,0],[1,0,1]],[[0,0,1],[1,1,0]],[[1,0,0],[0,1,1]],[[1,0,1],[1,0,1]],[[1,1,0],[1,1,0]],[[0,1,1],[0,1,1]],[[1,0,1],[1,1,1]],[[1,1,0],[1,1,1]],[[1,1,1],[0,1,1]],[[1,1,1],[1,0,1]],[[1,1,1],[1,1,0]],[[0,1,1],[1,1,1]],[[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]],[[0,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,0,1]],[[0,1,0],[0,0,1]],[[0,1,0],[1,0,0]]]
-
-    all_values = []
-
-    for even in all_evens:
-        #all_values.append([even, theta_with_bound(period_matrix,even[0],even[1],start_bound,prec)])
-        all_values.append([even, theta_without_bound(period_matrix,even[0],even[1],start_bound,False,prec)])
-
-    return all_values
-
-def counting(values_list):
+def counting(values_list, epsilon = 10.^(-2)):
+    """
+    this is meant to be used on the output of cmpoint.all_thetas() to count how many theta values are zero
+    epsilon can be changed depending on what value one wants to consider to be "zero"
+    """
     count = 0
     for value in values_list:
-        if value[1].abs() < 10.^(-2):
+        if value[1].abs() < epsilon:
             count += 1
     return count
 
 
-
-def compute_characteristic_sum_for_set_and_lists(S,eta):
-  #same function as before but we work with lists
-  sum=[[GF(2)(0),GF(2)(0),GF(2)(0)],[GF(2)(0),GF(2)(0),GF(2)(0)]]
-  for i in S:
-    for j in range(3):
-
-      sum[0][j]=sum[0][j]+eta[i][0][j]
-      sum[1][j]=sum[1][j]+eta[i][1][j]
-  return sum
-
-
-def thetaval(period_matrix_entries, S, eta):
-  sum=compute_characteristic_sum_for_set_and_lists(S,eta)
-  print sum
-  return theta_with_bound(period_matrix_entries,sum[0],sum[1], bound)
-
-def compute_rosenhain_coeffs(period_matrix_entries, U, T, eta, j):
+def compute_characteristic_sum_from_set_and_etas(S,eta_dict):
     """
-    This function computes the Rosenhain coefficient j, with j\geq
-    2. We assume a0=0, a1=1. Three values are computed, for
-    the three ways in which you can split the set in Takase's paper.
+    Given a dictionary of values eta_1, eta_2, ... eta_7 (giving a map eta), coerces the entries into the integers, then computes eta_S = sum_{i in S} eta_i
+    Returns a list [[a,b,c],[d,e,f]], a, b, c, d, e, f integers
     """
-    S=Set([0,1,j])
-    Y=T.difference(S)
-    X=Y.subsets()
-    ajvec=[]
-    signe=0
-    aj=0
-    for x in X:
-        if (j<6):
-	        a = j+1
-        else:
-	        a = 2
-        if ((x.cardinality()==2) and (a in x)):
-            M=x
-            N=Y.difference(M)
-            A=thetaval(period_matrix_entries, U.symmetric_difference(M.union(Set([0,1]))),eta)
-            B=thetaval(period_matrix_entries, U.symmetric_difference(N.union(Set([0,1]))),eta)
-            if ((IsZero(A)==0) and (IsZero(B)==0)):
-                C=thetaval(period_matrix_entries, U.symmetric_difference(M.union(Set([0,j]))),eta)
-                D=thetaval(period_matrix_entries, U.symmetric_difference(N.union(Set([0,j]))),eta)
-                aj=((D*C)^2)/((A*B)^2)
-                ajvec.append(aj)
-    return ajvec
+    Z = IntegerRing()
+    sum = [[Z(0),Z(0),Z(0)],[Z(0),Z(0),Z(0)]]
+    for i in S:
+        sum[0][0] += Z(eta_dict[j][0][0])
+        sum[0][1] += Z(eta_dict[j][0][1])
+        sum[0][2] += Z(eta_dict[j][0][2])
+        sum[1][0] += Z(eta_dict[j][0][3])
+        sum[1][1] += Z(eta_dict[j][0][4])
+        sum[1][2] += Z(eta_dict[j][0][5])
+    return sum
 
 
-def IsZero(A,prec=664):
-    n=A.imag()
-    if (n<0):
-        n=-n
-    m=A.real()
-    if (m<0):
-        m=-m
-    if (m<10^(-190) and n<10^(-190)):
-        a=1
-    else:
-        a=0
-    return a
-
-
-def rosenhain_coeffs(period_matrix, M, prec=664):
-    """M is the matrix we use to correct the system of characteristics"""
-
-
-    lam=[]
-    etaal=[]
-    etaal.append(vector([GF(2)(1),GF(2)(0),GF(2)(0),GF(2)(0),GF(2)(0),GF(2)(0)]))
-    etaal.append(vector([GF(2)(1),GF(2)(0),GF(2)(0),GF(2)(1),GF(2)(0),GF(2)(0)]))
-    etaal.append(vector([GF(2)(0),GF(2)(1),GF(2)(0),GF(2)(1),GF(2)(0),GF(2)(0)]))
-    etaal.append(vector([GF(2)(0),GF(2)(1),GF(2)(0),GF(2)(1),GF(2)(1),GF(2)(0)]))
-    etaal.append(vector([GF(2)(0),GF(2)(0),GF(2)(1),GF(2)(1),GF(2)(1),GF(2)(0)]))
-    etaal.append(vector([GF(2)(0),GF(2)(0),GF(2)(1),GF(2)(1),GF(2)(1),GF(2)(1)]))
-    etaal.append(vector([GF(2)(0),GF(2)(0),GF(2)(0),GF(2)(1),GF(2)(1),GF(2)(1)]))
-    #etaal.append(vector([GF(2)(0),GF(2)(0),GF(2)(0),GF(2)(0),GF(2)(0),GF(2)(0)]))
-
-
-
-    U=Set([0,2,4,6])
-    T1=Set([0,1,2,3,4,5,6])
-    new_eta=[]
-    eta_correction=[]
-    for i in range(7):
-           eta_correction.append(M*etaal[i])
-           new_eta.append(matrix([[eta_correction[i][j] for j in range(3)],[eta_correction[i][j+3] for j in range(3)]]))
-
-    for i in range(5):
-
-           sys.stdout.flush()
-           a=compute_rosenhain_coeffs(period_matrix,U,T1, new_eta,i+2)
-           lam.append(a)
-
-
-    return lam
-
-
-#M=identity_matrix(GF(2),6,6)
-bound=50
+def theta_from_char_and_list(all_values, characteristic):
+    """
+    inputs:
+    the list of all theta values computed already for a given period matrix (outputted by all_thetas)
+    a vector [[a,b,c],[d,e,f]] with entries in the integers, obtained via compute_characteristic_sum_from_set_and_etas
+    output:
+    returns the value of theta[[a,b,c],[d,e,f]](Z), which differs from the value computed by a factor given in Mumford, Tata lectures on theta, vol I page 123
+    """
+    reduced_char = [[],[]]
+    for i in range(2):
+        for j in range(3):
+            reduced_char[i].append(characteristic[i][j])
+    difference = [[],[]]
+    for i in range(2):
+        for j in range(3):
+            difference[i].append(characteristic[i][j]-reduced_char[i][j])
+    exponent = (reduced_char[0][0]*difference[1][0] + reduced_char[0][1]*difference[1][1] + reduced_char[0][2]*difference[1][2])/2
+    sign = (-1)**exponent
+    for pair in all_values:
+        if pair[0] == reduced_char:
+            theta_val = pair[1]
+    return sign*theta_val
