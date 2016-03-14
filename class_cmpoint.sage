@@ -1,5 +1,3 @@
-print 'hi'
-
 class CMPoint:
 
     def __init__(self, K, CM_type, ideal, xi, prec=None):
@@ -31,7 +29,7 @@ class CMPoint:
 
     def sextic_fld(self):
         """
-        Gives CMpoint its optimal sextic field given cubic and abc_list
+        Gives CMpoint its sextic field
         """
         return self._K
 
