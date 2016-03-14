@@ -1,8 +1,6 @@
 from sage.rings.number_field.number_field import NumberField_absolute
 from sage.numerical.mip import MIPSolverException
 
-print 'heyaa'
-
 class CMFieldfromPoly(NumberField_absolute):
     
     def __init__(self, polynomial, name, prec = 664):
@@ -110,20 +108,20 @@ class CMFieldfromPoly(NumberField_absolute):
             if el == 1:
                 unit *= u0
             elif el == -1:
-                unit *= u0^-1
+                unit *= u0**(-1)
             elif el == 2:
                 unit *= u1
             elif el == -2:
-                unit *= u1^-1
+                unit *= u1**(-1)
             elif el == 3:
                 unit *= u2
             elif el == -3:
-                unit *= u2^-1
+                unit *= u2**(-1)
         return unit
 
     def units_for_xi(self):
         """
-        Returns a list of representatives of the group U_K/U^+, where U_K are all units in K, and U^+ are all totally positive units in K.
+        Returns a list of representatives of the group U_K/U^+, where U_K are all units in K, and U^+ are all totally positive units in K0.
         """
         K0 = self._K0
         embedK0toK = self._embedK0toK
@@ -166,7 +164,6 @@ class CMFieldfromPoly(NumberField_absolute):
             p.set_min(w[0], None)
             p.set_min(w[1], None)
             p.set_objective(None)
-            #p.show()
             p.solve()
             n1,n2 = [int(v[1]) for v in p.get_values(w).iteritems()]
             assert n1*e10 + n2*e20 == a0
@@ -231,7 +228,7 @@ class CMFieldfromPoly(NumberField_absolute):
     def good_generator(self,CM_type,princ_ideal):
         """
         Given a CMField K, a primitive CM type and PRINCIPAL ideal, returns b, a generator of the ideal that is totally imaginary and that has imaginary part negative under each embedding in the CM type
-        IMPORTANT: This function might fail to produce a good generator even if one exists. The generator delta might be totally imaginary, but embed into CC with a very small real part because of rounding errors. If one of the units is very large, this could make the real part of u*delta too large and fail to return this generator
+        IMPORTANT: This function might fail to produce a good generator even if one exists. The generator delta might be totally imaginary, but embed into CC with a very small real part because of rounding errors. If one of the units is very large, this could make the real part of u*delta too large and fail to return this generator. One way to catch this mistake is to run the computation for all CM types in a given equivalence class.
         """
         delta = princ_ideal.gens_reduced()[0]
         try:
@@ -259,7 +256,6 @@ class CMFieldfromPoly(NumberField_absolute):
             b = self.good_generator(CM_type,princ_ideal)
             if not(b == None):
                 xi = b**(-1)
-		#print "how many units?", self.units_epsilon()
                 for u in self.units_epsilon():
                     all_pairs.append([ideal,u*xi])
         return all_pairs
@@ -293,7 +289,7 @@ def compare(num1, num2):
     """
     prec1 = num1.prec()
     prec2 = num2.prec()
-    prec = -min(prec1, prec2)/2
+prec = -min(prec1, prec2)/2 #this is ad hoc
     B=2^(prec)
     if (num1.real() - num2.real()).abs() < B and (num1.imag() - num2.imag()).abs() < B:
         return True
@@ -327,7 +323,7 @@ def is_primitive_galois(phis):
     c = K.gen()
     phi0,phi1,phi2 = phis
     G = K.galois_group()
-    #H is a group of order 3. if the CM-type "is" this group H, then it is not primitive. in turn, we set each element of the CM-type to be the identity and see if the other two elements can be the other two elements, non-trivial, elements of H
+    #H is a group of order 3. if the CM-type "is" this group H, then it is not primitive. in turn, we set each element of the CM-type to be the identity and see if the other two elements can be the other two elements, non-trivial, elements of H. See Weng for proof
     H = []
     for g in G:
         if g.order() == 3:
@@ -353,7 +349,7 @@ def is_H(psi0,psi1,psi2,rho,c,H):
     """
     if compare(rho(H[0](c)),psi0(c)) and compare(rho(H[1](c)),psi1(c)) and compare(rho(H[2](c)),psi2(c)):
         return True
-    if compare(rho(H[0](c)).conjugate(),psi0(c)) and compare(rho(H[1](c)).conjugate(),psi1(c)) and compare(rho(H[2](c)).conjugate(),psi2(c)):
+    elif compare(rho(H[0](c)).conjugate(),psi0(c)) and compare(rho(H[1](c)).conjugate(),psi1(c)) and compare(rho(H[2](c)).conjugate(),psi2(c)):
         return True
     else:
         return False 
@@ -369,48 +365,22 @@ def is_primitive_nongalois(phis):
     phi0,phi1,phi2 = phis
     L.<t> = K.galois_closure()
     G = K.galois_group(names = 't')
-    #H is a group of order 3. if the CM-type "is" this group H, then it is not primitive. in turn, we set each element of the CM-type to be the identity and see if the other two elements can be the other two elements, non-trivial, elements of H
+    #H is a group of order 3. if the CM-type "is" this group H, then it is not primitive. in turn, we set each element of the CM-type to be the identity and see if the other two elements can be the other two elements, non-trivial, elements of H. See Weng for proof
     H = []
     for g in G:
         if g.order() == 3 or g.order() == 1:
             H.append(g)
-    #print "length of H", len(H)
     for rho in L.complex_embeddings():
         if is_H(phi0,phi1,phi2,rho,c,H) or is_H(phi0,phi2,phi1,rho,c,H) or is_H(phi1,phi0,phi2,rho,c,H) or is_H(phi1,phi2,phi0,rho,c,H) or is_H(phi2,phi0,phi1,rho,c,H) or is_H(phi2,phi1,phi0,rho,c,H):
             return False
     return True
 
    
-"""def is_primitive_CMtype(phis):
-    
-    #Given a list of three complex embeddings of a CM sextic field, checks if it is a primitive CM type
-    
-    print "baby"
-    if is_CMtype(phis) == False:
-        raise TypeError('This is not even a CM type')
-    K = phis[0].domain()
-    G = K.galois_group(type = 'pari')
-    group = str(G.group()._pari_()[3])
-    #the case where G = ZZ/6
-    if group =='C(6) = 6 = 3[x]2':
-        return is_primitive_galois(phis)
-    #the case where G = ZZ/2 * S3
-    elif group =='D(6) = S(3)[x]2':
-       	print "I'm good"     
-        return is_primitive_nongalois(phis)
-    #all others all CM types are primitive
-    else:
-        print "i'm bad"
-        return True
-	
-"""
-
-
-        
 def is_primitive_CMtype(phis):
     """
     Given a list of three complex embeddings of a CM sextic field, checks if it is a primitive CM type
     """
+    
     if is_CMtype(phis) == False:
         raise TypeError('This is not even a CM type')
     K = phis[0].domain()
@@ -418,14 +388,11 @@ def is_primitive_CMtype(phis):
     group = str(G.group()._pari_()[3])
     #the case where G = ZZ/6
     if group =='C(6) = 6 = 3[x]2':
-        print 'galois group C(6) = 6 = 3[x]2'
         return is_primitive_galois(phis)
     #the case where G = ZZ/2 * S3
-    elif group =='D(6) = S(3)[x]2':
-        #print 'galois group D(6) = S(3)[x]2'
+    elif group =='D(6) = S(3)[x]2':   
         return is_primitive_nongalois(phis)
     #all others all CM types are primitive
     else:
-        print 'other galois group'
-        return True        
+        return True
 
