@@ -72,27 +72,44 @@ class CMPoint:
         return self._period_matrix
         
         
-    def all_thetas(self, start_bound = 20, prec = 664, bound = True):
+    def all_thetas(self, start_bound = 20, prec = None, bound = True):
         """
         if bound is set to true, uses theta_with_bound for each theta characteristic. if bound is set to false, uses theta_without_bound.
         """
         try:
             period_matrix = self._period_matrix
-        else:
+        except:
             period_matrix = self.period_matrix()
+        if prec == None:
+            prec = self._prec
 
         all_evens = [[[0,0,0],[0,0,0]],[[1,0,0],[0,0,0]],[[0,1,0],[0,0,0]],[[0,0,1],[0,0,0]],[[0,0,1],[1,0,0]],[[0,0,1],[0,1,0]],[[1,1,0],[0,0,0]],[[1,0,1],[0,0,0]],[[0,1,1],[0,0,0]],[[0,0,0],[1,0,1]],[[0,0,0],[0,1,1]],[[0,0,0],[1,1,0]],[[1,1,1],[0,0,0]],[[0,0,0],[1,1,1]],[[0,1,1],[1,0,0]],[[1,0,1],[0,1,0]],[[1,1,0],[0,0,1]],[[0,1,0],[1,0,1]],[[0,0,1],[1,1,0]],[[1,0,0],[0,1,1]],[[1,0,1],[1,0,1]],[[1,1,0],[1,1,0]],[[0,1,1],[0,1,1]],[[1,0,1],[1,1,1]],[[1,1,0],[1,1,1]],[[1,1,1],[0,1,1]],[[1,1,1],[1,0,1]],[[1,1,1],[1,1,0]],[[0,1,1],[1,1,1]],[[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]],[[0,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,0,1]],[[0,1,0],[0,0,1]],[[0,1,0],[1,0,0]]]
 
         all_values = []
 
         for even in all_evens:
-            if bound = True:
+            if bound == True:
                 all_values.append([even, theta_with_bound(period_matrix,even[0],even[1],start_bound,prec)])
-            elif bound = False:
+            elif bound == False:
                 all_values.append([even, theta_without_bound(period_matrix,even[0],even[1],start_bound,False,prec)])
                 
         self._all_thetas = all_values
         return self._all_thetas
+    
+    def counting(self, epsilon = 10.^(-2),bound = True):
+        """
+        this is meant to be used on the output of cmpoint.all_thetas() to count how many theta values are zero
+        epsilon can be changed depending on what value one wants to consider to be "zero"
+        """
+        count = 0
+        try:
+            all_values = self._all_thetas
+        except:
+            all_values = self.all_thetas(bound = bound)
+        for value in all_values:
+            if value[1].abs() < epsilon:
+                count += 1
+                return count
         
     def vanishing_char(self, bound = True, epsilon = 10.^(-2)):
         """
@@ -103,17 +120,12 @@ class CMPoint:
         if the period matrix is plane quartic, returns None
         if the period matrix is hyperelliptic, returns the theta characteristic "delta" such that theta[delta](Z) = 0
         if there are more than one vanishing characteristics, raises an error
-        "
+        """
         count = 0
-        try:
-            period_matrix = self._period_matrix
-        except:
-            period_matrix = self.period_matrix()
-            
         try:
             all_values = self._all_thetas
         except:
-            all_values = self.all_thetas(period_matrix, prec = self._prec, bound = bound)
+            all_values = self.all_thetas(bound = bound)
         
         for value in all_values:
             if value[1].abs() < epsilon:
@@ -121,7 +133,7 @@ class CMPoint:
         if count == 0:
             return None
         elif count > 1:
-            raise TypeError('The entries of this period matrix are too large, the theta functions don't converge well')
+            raise TypeError('The entries of this period matrix are too large, the theta functions don\'t converge well')
         elif count == 1:
             for value in all_values:
                 if value[1].abs() < epsilon:
@@ -172,7 +184,7 @@ class CMPoint:
             return self._U_set
 
 
-    def one_rosenhain_coeff(self, j, prec = 664, bound = True):
+    def one_rosenhain_coeff(self, j, prec = None, bound = True):
         """
         This function computes the Rosenhain coefficient j, with 3 <= j <= 7. We assume a1 = 0, a2 = 1. Three values are computed, for the three ways in which you can split the set in Takase's paper. This serves as an additional check that the period matrix is truly hyperelliptic.
         """
@@ -183,14 +195,17 @@ class CMPoint:
         try:
             U = self._U_set
         except:
-            U = self.U_set(prec = prec, bound = bound)
+            U = self.U_set(bound = bound)
         try:
             all_values = self._all_thetas
         except:
             all_values = self.all_thetas(prec = prec, bound = bound)
-
+        if prec == None:
+            prec = self._prec
+            
+        T = Set([1,2,3,4,5,6,7])
         S = Set([1,2,j])
-        Y = B.difference(S)
+        Y = T.difference(S)
         X = Y.subsets(2)
 
         ajvec = []
@@ -203,28 +218,29 @@ class CMPoint:
             raise ValueError('j is not between 3 and 7 inclusively')
 
         for V in X:
-        if a in V:
-            W = Y.difference(V)
-            setA = U.symmetric_difference(V.union(Set([1,2])))
-            setB = U.symmetric_difference(W.union(Set([1,2])))
-            setC = U.symmetric_difference(V.union(Set([1,j])))
-            setD = U.symmetric_difference(W.union(Set([1,j])))
-            A = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setA,eta_dict))
-            B = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setB,eta_dict))
-            C = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setC,eta_dict))
-            D = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setD,eta_dict))
-            aj=((D*C)^2)/((A*B)^2)
-            ajvec.append(aj)
+            if a in V:
+                W = Y.difference(V)
+                setA = U.symmetric_difference(V.union(Set([1,2])))
+                setB = U.symmetric_difference(W.union(Set([1,2])))
+                setC = U.symmetric_difference(V.union(Set([1,j])))
+                setD = U.symmetric_difference(W.union(Set([1,j])))
+                A = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setA,eta_dict))
+                B = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setB,eta_dict))
+                C = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setC,eta_dict))
+                D = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setD,eta_dict))
+                aj = ((A*B)^2)/((C*D)^2)
+                ajvec.append(aj)
         return ajvec
         
-    def all_rosenhain_coeffs(self, prec = 664, bound = True):
+    def all_rosenhain_coeffs(self, prec = None, bound = True):
         """
         returns all of the vectors of Rosenhain coefficients
         """
+        if prec == None:
+            prec = self._prec
+            
         all_coeffs = []
         for j in range(3,8):
-            all_coeffs.append(self.one_rosenhain_coeff(j,prec = prec, bound = bound)
+            all_coeffs.append(self.one_rosenhain_coeff(j,prec = prec, bound = bound))
         return all_coeffs
-        
-        
-B = Set([1,2,3,4,5,6,7])
+
