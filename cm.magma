@@ -1,0 +1,151 @@
+//This is a test checking that the computation is correct- we construct curves defined over finite fields by reducing mod p the Rosenhain polynomials that we obtained. We check that the number of points on the Jacobian given obtained using magma's point counting algorithms is the same as the one given by CM theory, i.e. N_K/Q(pi-1), with pi the Frobenius
+
+
+//We're defining CM field and the real multiplication. f is the polynomial defining the sextic field
+P<X> := PolynomialRing(RationalField());
+//f:=X^6 + 2*X^5-2*X^3 + 7*X^2 + 8*X + 13;
+L := NumberField(f);
+K := Subfields(L,3)[1,1]; //K=K_0
+OL := MaximalOrder(L);
+OK := MaximalOrder(K);
+//We need to be sure that the variety has "good reduction". We search for p that splits (check Shimura for details). 
+
+M:=[];
+e:=0;
+while (#M ne 6) do
+e:=e+1;
+p:= NextPrime(890+e*5);
+Fp:=GF(p); 
+M := Decomposition(OL,p);
+end while;
+POLY<x>:=PolynomialRing(Fp);
+
+//h1,h2,h3,h4,h5 are the Rosenhain polynomials
+//h1:=x^3 + 22*x^2 - 16*x - 8;
+//h2:=x^3 - 4*x^2 + 3*x + 1;
+//h3:=(8*x^3 - 8*x^2 - 2*x + 1);
+//h4:=x^3 - 9*x^2 - x + 1;
+//h5:=x^3 + 2*x^2 - x - 1;
+
+
+
+i1:=Roots(h1);
+i2:=Roots(h2);
+i3:=Roots(h3);
+i4:=Roots(h4);
+i5:=Roots(h5);
+
+
+// find conjugate pairs;
+_,phi := IsSubfield(K,L);
+IdealVec:=[];
+for i:=1 to 3 do
+I := Decomposition(OK,p)[i,1]; 
+// prime in OK lying over
+J := ideal<OL | phi(Generators(I)[1]),phi(Generators(I)[2])>;
+//lift of I to OL
+pairs := {[k,j] : k,j in [1..6] | k lt j};
+for r in pairs do
+if M[r[1],1]*M[r[2],1] eq J then
+conj := r; // indices of conjugate primes over I
+Include(~IdealVec,[M[conj[1],1],M[conj[2],1]]);
+end if;
+end for;
+//FIX THIS!
+//whenI :=Decomposition(OK,p)[2,1]
+//whenI :=Decomposition(OK,p)[3,1]
+end for;
+alpha1:=IdealVec[1][1]*IdealVec[2][1]*IdealVec[3][1];
+alpha2:=IdealVec[1][1]*IdealVec[2][1]*IdealVec[3][2];
+alpha3:=IdealVec[1][1]*IdealVec[2][2]*IdealVec[3][1];
+alpha4:=IdealVec[1][1]*IdealVec[2][2]*IdealVec[3][2];
+a1,pi1:=IsPrincipal(alpha1);
+a2,pi2:=IsPrincipal(alpha2);
+a3,pi3:=IsPrincipal(alpha3);
+a4,pi4:=IsPrincipal(alpha4);
+
+
+G,phi:=UnitGroup(OL);
+v:=phi(G.1);
+//I took one possibility for the unit, but you could also take another: u=u1 etc, it will give the same result
+u1:=phi(G.2);
+u2:=phi(G.3);
+
+u := u1*u2;
+pi:=[pi1,pi2,pi3,pi4,v*pi1,v*pi2,v*pi3,v*pi4];
+pi_c := [Conjugates(x)[1] : x in pi];
+u_c := Conjugates(u)[1];
+if Abs(u_c) lt 1 then
+usign := -1;
+else
+usign := 1;
+end if;
+d := [];
+for i in [1..#pi_c] do
+z := pi_c[i];
+d[i] := 0;
+while Abs(z)^2 lt p- 0.000001 do
+z *:= u_c^usign;
+d[i] +:= usign;
+end while;
+while Abs(z)^2 gt p+ 0.000001 do
+z *:= u_c^-usign;
+d[i] -:= usign;
+end while;
+end for; 
+pi:=[pi[i]*u^d[i] : i in [1..#pi]]; 
+
+
+
+pis:=[Conjugates(i):i in pi];
+Ns:=[];
+for i:=1 to #pis do
+N:=(1-pis[i][1])*(1-pis[i][2])*(1-pis[i][3])*(1-pis[i][4])*(1-pis[i][5])*(1-pis[i][6]);
+N:=Integers()!Round(N);
+N;
+Include(~Ns,N);
+N:=(1+pis[i][1])*(1+pis[i][2])*(1+pis[i][3])*(1+pis[i][4])*(1+pis[i][5])*(1+pis[i][6]);
+N:=Integers()!Round(N);
+N;
+Include(~Ns,N);
+end for;
+Ns:=[i: i in Ns];
+
+
+s:=0;
+// this is our trial to see if the curves we produce have the predicted number of points
+for i:=1 to #Roots(h1) do
+    for j:=1 to #Roots(h2) do
+        for k:=1 to #Roots(h3) do
+           for l:=1 to #Roots(h4) do
+              for d:=1 to #Roots(h5) do
+	      	  vec:=[];
+	       	  Include(~vec,i1[i][1]); 
+		  Include(~vec,i2[j][1]);
+		  Include(~vec,i3[k][1]);
+		  Include(~vec,i4[l][1]); 
+                  Include(~vec,i5[d][1]);
+                               
+		  if (#vec eq 5) then
+                      NewPol:=x*(x-1)*(x-i1[i][1])*(x-i2[j][1])*(x-i3[k][1])*(x-i4[l][1])*(x-i5[d][1]);
+                      H:=HyperellipticCurve(NewPol);
+		      J:=Jacobian(H);
+                      for gh:=1 to #Ns do
+                        P:=Random(J);
+                        P:=Ns[gh]*P;
+		        a:=Order(J); 
+                        if (a in Ns) then 
+                          print J;
+                        end if;  
+                        if (Identity(J) eq P) then 
+                             s:=s+1;
+                            
+                        end if;  
+                      end for;                  
+                  
+                  end if;
+              end for;
+           end for;
+       end for;
+    end for;
+end for;
