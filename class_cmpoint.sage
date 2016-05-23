@@ -201,7 +201,7 @@ class CMPoint:
         try:
             all_values = self._all_thetas
         except:
-            all_values = self.all_thetas(start_bound, prec = prec, bound)
+            all_values = self.all_thetas(start_bound, prec, bound)
 
             
         T = Set([1,2,3,4,5,6,7])
@@ -242,6 +242,6 @@ class CMPoint:
             
         all_coeffs = []
         for j in range(3,8):
-            all_coeffs.append(self.one_rosenhain_coeff(j,prec = prec, start_bound, bound))
+            all_coeffs.append(self.one_rosenhain_coeff(j,prec, start_bound, bound))
         return all_coeffs
 
