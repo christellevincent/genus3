@@ -184,7 +184,7 @@ class CMPoint:
             return self._U_set
 
 
-    def one_rosenhain_coeff(self, j, prec = None, bound = True):
+    def one_rosenhain_coeff(self, j, prec = None, start_bound = 20, bound = True):
         """
         This function computes the Rosenhain coefficient j, with 3 <= j <= 7. We assume a1 = 0, a2 = 1. Three values are computed, for the three ways in which you can split the set in Takase's paper. This serves as an additional check that the period matrix is truly hyperelliptic.
         """
@@ -196,12 +196,13 @@ class CMPoint:
             U = self._U_set
         except:
             U = self.U_set(bound = bound)
+        if prec == None:
+            prec = self._prec
         try:
             all_values = self._all_thetas
         except:
-            all_values = self.all_thetas(prec = prec, bound = bound)
-        if prec == None:
-            prec = self._prec
+            all_values = self.all_thetas(start_bound, prec = prec, bound)
+
             
         T = Set([1,2,3,4,5,6,7])
         S = Set([1,2,j])
@@ -232,7 +233,7 @@ class CMPoint:
                 ajvec.append(aj)
         return ajvec
         
-    def all_rosenhain_coeffs(self, prec = None, bound = True):
+    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = True):
         """
         returns all of the vectors of Rosenhain coefficients
         """
@@ -241,6 +242,6 @@ class CMPoint:
             
         all_coeffs = []
         for j in range(3,8):
-            all_coeffs.append(self.one_rosenhain_coeff(j,prec = prec, bound = bound))
+            all_coeffs.append(self.one_rosenhain_coeff(j,prec = prec, start_bound, bound))
         return all_coeffs
 
