@@ -233,7 +233,7 @@ class CMPoint:
                 ajvec.append(aj)
         return ajvec
         
-    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = True):
+    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = False):
         """
         returns all of the vectors of Rosenhain coefficients
         """
