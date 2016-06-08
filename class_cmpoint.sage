@@ -72,7 +72,7 @@ class CMPoint:
         return self._period_matrix
         
         
-    def all_thetas(self, start_bound = 20, prec = None, bound = True):
+    def all_thetas(self, start_bound = 20, prec = None, bound = False):
         """
         if bound is set to true, uses theta_with_bound for each theta characteristic. if bound is set to false, uses theta_without_bound.
         """
@@ -96,7 +96,7 @@ class CMPoint:
         self._all_thetas = all_values
         return self._all_thetas
     
-    def counting(self, epsilon = 10.^(-2),bound = True):
+    def counting(self, epsilon = 10.^(-2),bound = False):
         """
         this is meant to be used on the output of cmpoint.all_thetas() to count how many theta values are zero
         epsilon can be changed depending on what value one wants to consider to be "zero"
@@ -111,7 +111,7 @@ class CMPoint:
                 count += 1
                 return count
         
-    def vanishing_char(self, bound = True, epsilon = 10.^(-2)):
+    def vanishing_char(self, bound = False, epsilon = 10.^(-2)):
         """
         inputs:
         bound is passed to all_thetas
@@ -140,7 +140,7 @@ class CMPoint:
                     self._vanishing_char = value[0]
                     return self._vanishing_char
                     
-    def eta_dict(self, bound = True):
+    def eta_dict(self, bound = False, epsilon = 10.^(-2)):
         """
         bound is passed to all_thetas (ultimately) True is theta_with_bound and False is theta_without_bound
         returns a dictionary giving values eta_1, eta_2, ... eta_7 for an eta-map associated to the period matrix computed for this cm point
@@ -148,7 +148,7 @@ class CMPoint:
         try:
             vanishing_char = self._vanishing_char
         except:
-            vanishing_char = self.vanishing_char(bound = bound)
+            vanishing_char = self.vanishing_char(bound = bound, epsilon = epsilon)
         if vanishing_char == None:
             raise TypeError('This is a plane quartic Jacobian')
         else:
@@ -163,14 +163,14 @@ class CMPoint:
             self._eta_dict = {1: M*mumford_eta[1], 2: M*mumford_eta[2], 3: M*mumford_eta[3], 4: M*mumford_eta[4], 5:M*mumford_eta[5], 6: M*mumford_eta[6], 7:M*mumford_eta[7]}
             return self._eta_dict
             
-    def U_set(self, bound = True):
+    def U_set(self, bound = False, epsilon = 10.^(-2)):
         """
         returns U = {2, 4, 6} if delta is non zero and U = {1, 2, 3, 4, 5, 6, 7} if delta is zero (infinity is implicitly in both sets)
         """
         try:
             vanishing_char = self._vanishing_char
         except:
-            vanishing_char = self.vanishing_char(bound = bound)
+            vanishing_char = self.vanishing_char(bound = bound, epsilon = epsilon)
         if vanishing_char == None:
             raise TypeError('This is a plane quartic Jacobian')
         else:
@@ -184,18 +184,18 @@ class CMPoint:
             return self._U_set
 
 
-    def one_rosenhain_coeff(self, j, prec = None, start_bound = 20, bound = True):
+    def one_rosenhain_coeff(self, j, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
         """
         This function computes the Rosenhain coefficient j, with 3 <= j <= 7. We assume a1 = 0, a2 = 1. Three values are computed, for the three ways in which you can split the set in Takase's paper. This serves as an additional check that the period matrix is truly hyperelliptic.
         """
         try:
             eta_dict = self._eta_dict
         except:
-            eta_dict = self.eta_dict(bound = bound)
+            eta_dict = self.eta_dict(bound = bound, epsilon = epsilon)
         try:
             U = self._U_set
         except:
-            U = self.U_set(bound = bound)
+            U = self.U_set(bound = bound, epsilon = epsilon)
         if prec == None:
             prec = self._prec
         try:
@@ -233,7 +233,7 @@ class CMPoint:
                 ajvec.append(aj)
         return ajvec
         
-    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = False):
+    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
         """
         returns all of the vectors of Rosenhain coefficients
         """
@@ -242,6 +242,6 @@ class CMPoint:
             
         all_coeffs = []
         for j in range(3,8):
-            all_coeffs.append(self.one_rosenhain_coeff(j,prec, start_bound, bound))
+            all_coeffs.append(self.one_rosenhain_coeff(j,prec, start_bound, bound, epsilon))
         return all_coeffs
 
