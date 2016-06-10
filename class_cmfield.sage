@@ -230,13 +230,20 @@ class CMFieldfromPoly(NumberField_absolute):
         Given a CMField K, a primitive CM type and PRINCIPAL ideal, returns b, a generator of the ideal that is totally imaginary and that has imaginary part negative under each embedding in the CM type
         IMPORTANT: This function might fail to produce a good generator even if one exists. The generator delta might be totally imaginary, but embed into CC with a very small real part because of rounding errors. If one of the units is very large, this could make the real part of u*delta too large and fail to return this generator. One way to catch this mistake is to run the computation for all CM types in a given equivalence class.
         """
+        from sage.rings.number_field.number_field import refine_embedding
+        prec = self._prec
+        
         delta = princ_ideal.gens_reduced()[0]
+        
         try:
             units_for_xi = self._units_for_xi
         except:
             units_for_xi = self.units_for_xi()
         for u in units_for_xi:
-                if all([CM_type[i](u*delta).imag()<0 for i in range(3)]) and all([compare(CM_type[i](u*delta).real(),0.0) for i in range(3)]):
+                #if the unit u is large, we refine the embedding to get more precision and hopefully keep the real part small
+                size = max(prec,log(u.abs(),10).ceiling())
+                new_CM_type = [refine_embedding(phi,prec) for phi in CM_type]
+                if all([new_CM_type[i](u*delta).imag()<0 for i in range(3)]) and all([compare(new_CM_type[i](u*delta).real(),0.0) for i in range(3)]):
                     return u*delta
         return None
     
