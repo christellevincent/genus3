@@ -82,7 +82,7 @@ def theta_without_bound(period_matrix_entries, vec1, vec2, start_bound = 20, che
         if check:
             print "computing iteration number {0}".format(iterates)
             print values[iterates]
-        if compare(values[iterates],values[iterates-1],prec):
+        if compare(values[iterates],values[iterates-1],prec+10):
             equality = True
             
     return values[iterates]

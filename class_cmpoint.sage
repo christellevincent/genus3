@@ -94,7 +94,7 @@ class CMPoint:
         iterates = 0        
         
         while equality == False:
-            iterates =+ 1
+            iterates += 1
             phis = [refine_embedding(phi,prec + iterates*20) for phi in phis]
             big_period_matrix = Matrix([[phi(b) for b in symplectic_basis] for phi in phis])
             big_period_matrix.subdivide(3,3)
@@ -111,7 +111,7 @@ class CMPoint:
                         CMvalimag[i,j] = Zs[iterates][i,j].imag()
                 print CMvalimag.eigenvalues()
             
-            if all([compare(Zs[iterates][i,j],Zs[iterates-1][i,j],prec+1) for i in range(3) for j in range(3)]):
+            if all([compare(Zs[iterates][i,j],Zs[iterates-1][i,j],prec+10) for i in range(3) for j in range(3)]):
                 equality = True 
         
         Z = Zs[iterates]
