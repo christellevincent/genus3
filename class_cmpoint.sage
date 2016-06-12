@@ -136,7 +136,7 @@ class CMPoint:
         try:
             period_matrix = self._period_matrix
         except:
-            period_matrix = self.period_matrix()
+            period_matrix = self.acc_period_matrix()
         if prec == None:
             prec = self._prec
 
