@@ -240,11 +240,10 @@ class CMFieldfromPoly(NumberField_absolute):
         except:
             units_for_xi = self.units_for_xi()
         for u in units_for_xi:
-                #if the unit u is large, we refine the embedding to get more precision and hopefully keep the real part small
-                size = max(prec,log(u.abs(),10).ceiling())
-                new_CM_type = [refine_embedding(phi,prec) for phi in CM_type]
-                if all([new_CM_type[i](u*delta).imag()<0 for i in range(3)]) and all([compare(new_CM_type[i](u*delta).real(),0.0) for i in range(3)]):
-                    return u*delta
+            #we refine the embedding to get more precision and hopefully keep the real part small
+            new_CM_type = [refine_embedding(phi,2*prec) for phi in CM_type]
+            if all([new_CM_type[i](u*delta).imag()<0 for i in range(3)]) and all([compare(new_CM_type[i](u*delta).real(),0.0,prec) for i in range(3)]):
+                return u*delta
         return None
     
     def princ_polarized(self,CM_type):
@@ -290,13 +289,14 @@ def polynomial_from_cubic_triple(cubic,triple):
     S.<x> = PolynomialRing(QQ,'x')
     return S(newpoly)
 
-def compare(num1, num2):
+def compare(num1, num2, prec = None):
     """
     Because we embedd everything into CC, there are losses of precision. We need to check if two complex numbers are "close enough"
     """
-    prec1 = num1.prec()
-    prec2 = num2.prec()
-    prec = -min(prec1, prec2)/2 #this is ad hoc
+    if prec == None:
+        prec1 = num1.prec()
+        prec2 = num2.prec()
+        prec = -min(prec1, prec2)/2 #this is ad hoc
     B=2^(prec)
     if (num1.real() - num2.real()).abs() < B and (num1.imag() - num2.imag()).abs() < B:
         return True

@@ -38,7 +38,6 @@ class CMPoint:
         Set test to True to see the period matrix and the eigenvalues; can be used to check if it looks symmetric and positive definite
         """
         K = self._K
-        phi0, phi1, phi2 = self._CM_type
         ideal = self._ideal
         xi = self._xi
 
@@ -66,6 +65,64 @@ class CMPoint:
         D= Z[1][1]
         E= Z[1][2]
         F= Z[2][2]
+
+        M =[A, B, C, D, E, F]
+        self._period_matrix = M
+        return self._period_matrix
+        
+    def acc_period_matrix(self, test = False):
+        """
+        This computes the period matrix several times, refining the precision of the CM type until two consecutive period matrices have entries that agree up to the precision of the CM point
+        """
+        K = self._K
+        ideal = self._ideal
+        xi = self._xi
+        prec = self._prec
+        from sage.rings.number_field.number_field import refine_embedding
+        
+        basis = ideal.basis()
+        riemann_form = Matrix(ZZ,[[(conjugate(x)*xi*y).trace() for y in basis] for x in basis])
+        symplectic_basis = Sequence(riemann_form.symplectic_form()[1]*vector(basis))
+        phis = self._CM_type
+        big_period_matrix = Matrix([[phi(b) for b in symplectic_basis] for phi in phis])
+        big_period_matrix.subdivide(3,3)
+        Omega1 = big_period_matrix.subdivision(0,0)
+        Omega2 = big_period_matrix.subdivision(0,1)
+        Zs = [Omega2.adjoint()*Omega1/Omega2.det()]
+        
+        equality = False
+        iterates = 0        
+        
+        while equality == False:
+            iterates =+ 1
+            phis = [refine_embedding(phi,prec + iterates*20) for phi in phis]
+            big_period_matrix = Matrix([[phi(b) for b in symplectic_basis] for phi in phis])
+            big_period_matrix.subdivide(3,3)
+            Omega1 = big_period_matrix.subdivision(0,0)
+            Omega2 = big_period_matrix.subdivision(0,1)
+            Zs.append(Omega2.adjoint()*Omega1/Omega2.det())
+        
+            if test:
+                print "computing iteration number {0}".format(iterates) 
+                print Zs[iterates]
+                CMvalimag=matrix(RR,3,3)
+                for i in range(3):
+                    for j in range(3):
+                        CMvalimag[i,j] = Zs[iterates][i,j].imag()
+                print CMvalimag.eigenvalues()
+            
+            if all([compare(Zs[iterates][i,j],Zs[iterates-1][i,j],prec+1) for i in range(3) for j in range(3)]):
+                equality = True 
+        
+        Z = Zs[iterates]
+        
+        CC = ComplexField(prec)
+        A= CC(Z[0][0])
+        B= CC(Z[0][1])
+        C= CC(Z[0][2])
+        D= CC(Z[1][1])
+        E= CC(Z[1][2])
+        F= CC(Z[2][2])
 
         M =[A, B, C, D, E, F]
         self._period_matrix = M
