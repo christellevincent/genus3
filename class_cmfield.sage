@@ -33,12 +33,12 @@ class CMFieldfromPoly(NumberField_absolute):
         embeddings.pop(embeddings.index(phi1bar))
         phi2 = embeddings.pop(0)
         candidate = [phi0,phi1,phi2]
-        if is_primitive_CMtype(candidate):
+        if is_primitive_CMtype(candidate, prec):
             return candidate
         else:
             phi2bar = find_conj(embeddings,phi2)
             candidate = [phi0,phi1,phi2bar]
-            assert is_primitive_CMtype(candidate)
+            assert is_primitive_CMtype(candidate, prec)
             return candidate
 
     def all_CMtypes(self ,prec = None):
@@ -53,7 +53,7 @@ class CMFieldfromPoly(NumberField_absolute):
         all_triples = list(map(list, combinations(embeddings, 3)))
         for triple in all_triples:
             try:
-               if is_primitive_CMtype(triple):
+               if is_primitive_CMtype(triple, prec):
                  primitives.append(triple)
             except TypeError:
                 continue
@@ -297,7 +297,7 @@ def compare(num1, num2, prec = None):
         prec1 = num1.prec()
         prec2 = num2.prec()
         prec = -min(prec1, prec2)/2 #this is ad hoc
-    B=2^(-prec)
+    B=2^(prec)
     if (num1.real() - num2.real()).abs() < B and (num1.imag() - num2.imag()).abs() < B:
         return True
     else:
@@ -361,7 +361,7 @@ def is_H(psi0,psi1,psi2,rho,c,H):
     else:
         return False 
 
-def is_primitive_nongalois(phis):
+def is_primitive_nongalois(phis, prec):
     """
     Given a list of three complex embeddings of a CM sextic field with Galois group ZZ/2 * S3, checks if it is a primitive CM type
     """
@@ -377,13 +377,12 @@ def is_primitive_nongalois(phis):
     for g in G:
         if g.order() == 3 or g.order() == 1:
             H.append(g)
-    for rho in L.complex_embeddings():
+    for rho in L.complex_embeddings(prec):
         if is_H(phi0,phi1,phi2,rho,c,H) or is_H(phi0,phi2,phi1,rho,c,H) or is_H(phi1,phi0,phi2,rho,c,H) or is_H(phi1,phi2,phi0,rho,c,H) or is_H(phi2,phi0,phi1,rho,c,H) or is_H(phi2,phi1,phi0,rho,c,H):
             return False
     return True
-
-   
-def is_primitive_CMtype(phis):
+       
+def is_primitive_CMtype(phis, prec):
     """
     Given a list of three complex embeddings of a CM sextic field, checks if it is a primitive CM type
     """
@@ -398,7 +397,7 @@ def is_primitive_CMtype(phis):
         return is_primitive_galois(phis)
     #the case where G = ZZ/2 * S3
     elif group =='D(6) = S(3)[x]2':   
-        return is_primitive_nongalois(phis)
+        return is_primitive_nongalois(phis, prec)
     #all others all CM types are primitive
     else:
         return True
