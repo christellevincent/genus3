@@ -77,7 +77,7 @@ class CMPoint:
         prec = self._prec 
         
         basis = ideal.basis()
-        riemann_form = Matrix(ZZ,[[(conjugate(x)*xi*y).trace() for y in basis] for x in basis])
+        riemann_form = Matrix(ZZ,[[(x.conjugate()*xi*y).trace() for y in basis] for x in basis])
         symplectic_basis = Sequence(riemann_form.symplectic_form()[1]*vector(basis))
         return symplectic_basis       
         
@@ -483,7 +483,7 @@ class CMPoint:
         except:
             all_values = self.all_thetas(start_bound, prec, bound)
             
-        good_ros_chars = [chars_to_c(char) for char in ros_chars]
+        good_ros_chars = [char_to_c(char) for char in ros_chars]
         
         conjugate_chars = []
         for pair in good_H:
