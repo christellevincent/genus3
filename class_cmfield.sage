@@ -265,6 +265,154 @@ class CMFieldfromPoly(NumberField_absolute):
                 for u in self.units_epsilon():
                     all_pairs.append([ideal,u*xi])
         return all_pairs
+        
+    def phi_to_gal(self,phi0,phi):
+        #L.<t> = self.galois_closure()
+        G = K.galois_group(names = 't')
+        #psi = K.embeddings(L)[0]
+        Kphis = K.complex_embeddings(self._prec)
+        a = K.gen()
+        #for rho in Lphis:
+        #    if compare(rho(psi(a)),phi0(a)):
+        #        Phi0 = rho
+        #        break
+        #for sigma in G:
+        #    if compare(Phi0(sigma(psi(a))),phi(a)):
+        #        return sigma
+        for sigma in G:
+            if compare(phi0(sigma(a)),phi(a)):
+                return sigma
+                
+    def gal_to_phi(self,phi0,sigma):
+        L.<t> = self.galois_closure()
+        G = L.galois_group(names = 't')
+        psi = K.embeddings(L)[0]
+        Lphis = L.complex_embeddings(self._prec)
+        a = K.gen()
+        for rho in Lphis:
+            if compare(rho(psi(a)),phi0(a)):
+                Phi0 = rho
+                break
+        for phi in K.complex_embeddings(self._prec):
+            if compare(Phi0(sigma(psi(a))),phi(a)):
+                return phi
+        
+    def reflex(self,Phi):
+        """
+        returns the reflex as elements of the galois group
+        """
+        G = self.galois_group(type = 'pari')
+        group = str(G.group()._pari_()[3])
+        #the case where G = ZZ/6
+        if group =='C(6) = 6 = 3[x]2':
+            phi0,phi1,phi2 = Phi
+            sigma0 = self.phi_to_gal(phi0,phi0)
+            sigma1 = self.phi_to_gal(phi0,phi1)
+            sigma2 = self.phi_to_gal(phi0,phi2)
+            #psi1 = self.gal_to_phi(phi0,sigma1.inverse())
+            #psi2 = self.gal_to_phi(phi0,sigma2.inverse())
+            return [sigma0.inverse(),sigma1.inverse(),sigma2.inverse()]
+        else:
+            raise NotImplementedError
+        
+    def principal_type_norms(self,Psi,modulus):
+        """
+        """
+        O = self.maximal_order()
+        M = modulus * O
+        
+        gens = [self.type_norm_element(Psi,self(g)) for g in M.idealstar(2).gens()]
+        
+        gens_of_candidate_group = self.class_group().gens()
+        orders_of_gens = [g.order() for g in gens_of_candidate_group]
+        
+        from sage.misc.mrange import cartesian_product_iterator
+        
+        for k in cartesian_product_iterator([range(o) for o in orders_of_gens]):
+            if any(k):
+                for c in [gens_of_candidate_group[i]**k[i] for i in range(len(k))]:
+                    A = c.ideal()
+                    # Now we need A to be coprime to "modulus"
+                    if not A.is_coprime(M):
+                        A = A * A.idealcoprime(M)
+                    mu = self.a_to_mu(Psi, A)
+                    if mu != None:
+                        gens.append(mu)
+        return gens
+        
+    def a_to_mu(self,Psi, A):
+        """
+        Given an ideal A and CM-type Psi, returns mu with mu*mubar in QQ and
+        N_Psi(A) = (mu) if mu exists, and None otherwise
+        """
+        C = self.type_norm_ideal(Psi,A)
+        if not C.is_principal():
+            return None
+        mu = C.gens_reduced()[0]
+        epsepsbar = A.norm() / mu / mu.conjugate()
+        # So we need to find a unit eps with eps*epsbar = epsepsbar (if it exists)
+        # and multiply mu by it.
+        # Then eps*mu is the output.
+        # The unit group of K0 has finite index e in that of K.
+        # If eps is any unit in K and epsbar is its complex conjugate, then
+        # eps^e is in K0, so epsbar^e = eps^e, hence epsbar = eps * u for
+        # a root of unity u
+        # We get eps*epsbar = eps^2 * u.
+        # So if the correct eps exists, then there is a root of unity
+        # u with epsepsbar / u = eps^2 and epsbar = eps*u.
+        # For any u, eps is well-defined up to sign, but sign is irrelevant.
+        for u in self.roots_of_unity():
+            if (epsepsbar/u).is_square():
+                eps = (epsepsbar/u).sqrt()
+                if eps.conjugate() == u*eps:
+                    return eps*mu
+        return None
+        
+    def type_norm_ideal(self,Psi,A):
+        den = A.denominator()
+        if den != 1:
+            D = den.norm()
+            return self.type_norm_ideal(Psi,A*D) / self.type_norm_element(Psi,D)
+        (a, b) = A.gens_two()
+        if a == 0:
+            a = b
+            b = 0
+ 
+        x = self.type_norm_element(Psi,a)
+        if b == 0:
+            return x.parent().ideal(x)
+        
+        # Now b/A and a/A are coprime integral ideals,
+        # a is a rational integer, and A is integral.
+        # Sanity check:
+        if not a in ZZ:
+            raise RuntimeError, "First element of gens_two is not a " \
+                                "rational integer for integral ideal %s" % A
+        z = (b/A).idealcoprime(a.parent().ideal(a))
+        # Now z*b/A is an integral (according to the Pari documentation)
+        # ideal coprime to a.
+        y = self.type_norm_element(Psi,z*b)
+        B = x.parent().ideal(x, y)
+        # Let C be the type norm of A and v any valuation of the reflex field.
+        #  * If v(a) > 0, then for any pull-back w of v also w(a) > 0,
+        #    hence w(z*b) = w(A) and w(a) >= w(A).
+        #    For the type norm, we get
+        #    v(y) = v(C) and v(x) >= v(A), so v(B) = v(A).
+        #  * If v(a) = 0, then for any pull-back w of v also w(z*b) >= w(A) = 0
+        #    and w(a) = 0. For the type norm, we get
+        #    v(x) = v(C) = 0 and v(y) >= v(C) = 0, so v(B) = v(A) = 0.
+        if not B.norm()**A.number_field().degree() == \
+               (A.norm()**B.number_field().degree())**3:
+            raise RuntimeError, "Bug in type norm of ideals. Norm of type " \
+                                "norm is incorrect: %s instead of %s" % \
+                            (B.norm(), (A.norm()**(B.number_field().degree()/ \
+                            A.number_field().degree()))**self.g())
+        return B
+        
+    def type_norm_element(self,Psi,x):
+        psi0,psi1,psi2 = Psi
+        return psi0(x)*psi1(x)*psi2(x)
+
     
 def CMField(cubic,triple,prec=664):
     """
