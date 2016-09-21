@@ -444,8 +444,8 @@ def compare(num1, num2, prec = None):
     if prec == None:
         prec1 = num1.prec()
         prec2 = num2.prec()
-        prec = -min(prec1, prec2)/2 #this is ad hoc
-    B=2^(prec)
+        prec = min(prec1, prec2)/2 #this is ad hoc
+    B=2^(-prec)
     if (num1.real() - num2.real()).abs() < B and (num1.imag() - num2.imag()).abs() < B:
         return True
     else:

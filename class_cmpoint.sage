@@ -42,7 +42,7 @@ class CMPoint:
         xi = self._xi
 
         basis = ideal.basis()
-        riemann_form = Matrix(ZZ,[[(conjugate(x)*xi*y).trace() for y in basis] for x in basis])
+        riemann_form = Matrix(ZZ,[[(x.conjugate()*xi*y).trace() for y in basis] for x in basis])
         symplectic_basis = Sequence(riemann_form.symplectic_form()[1]*vector(basis))
         big_period_matrix = Matrix([[phi(b) for b in symplectic_basis] for phi in self._CM_type])
         big_period_matrix.subdivide(3,3)
