@@ -41,7 +41,7 @@ class CMFieldfromPoly(NumberField_absolute):
             assert is_primitive_CMtype(candidate, prec)
             return candidate
 
-    def all_CMtypes(self ,prec = None):
+    def all_CMtypes(self, prec = None):
         """
         Given a CM sextic field K, returns a list of all PRIMITIVE CM types for K
         """
@@ -296,8 +296,8 @@ def compare(num1, num2, prec = None):
     if prec == None:
         prec1 = num1.prec()
         prec2 = num2.prec()
-        prec = -min(prec1, prec2)/2 #this is ad hoc
-    B=2^(prec)
+        prec = min(prec1, prec2)/2 #this is ad hoc
+    B=2^(-prec)
     if (num1.real() - num2.real()).abs() < B and (num1.imag() - num2.imag()).abs() < B:
         return True
     else:
