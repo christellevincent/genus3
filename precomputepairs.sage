@@ -45,5 +45,4 @@ try_pairs = look_for_pairs(N)
 while len(try_pairs) == 0:
     N *= 10
     try_pairs = look_for_pairs(N)
-    print N
 pairs = try_pairs
