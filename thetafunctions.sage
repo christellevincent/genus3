@@ -3,20 +3,29 @@
  This file has the functions to compute values of theta functions
 
 """
+import warnings
+warnings.simplefilter("ignore", UserWarning) #In order to remove warnings when computing eigenvalues
 
-def theta_with_bound(period_matrix_entries, vec1, vec2, bound, prec = 664):
-    """
-    INPUT:
-    period matrix entries (as a tuple of six entries)
-    vec1 and vec2 give the theta characteristic
-    bound gives the size of the rectangular box over which we will sum in the theta function
-    prec gives the precision IN BITS (which is then converted to digits for pari/gp)
-
-    OUTPUT:
-    value of theta[vec1,vec2](period_matrix)
-    """
-    a, b, c, d, e, f= period_matrix_entries
+@parallel
+def theta_function(period_matrix, vec1, vec2, prec = 664, as_tuple = True):
+    if as_tuple:
+        a, b, c, d, e, f= period_matrix
+        Z = Matrix(a.parent(),[[a,b,c],[b,d,e],[c,e,f]])
+        
+    elif not as_tuple:
+        Z = period_matrix
+        a= Z[0][0]
+        b= Z[0][1]
+        c= Z[0][2]
+        d= Z[1][1]
+        e= Z[1][2]
+        f= Z[2][2]
+    
+    eig = min((Z.apply_map(lambda aux: aux.imag_part())).eigenvalues())
+    
     dig = floor(RR(prec * log(2,10)))
+    
+    bound = ceil(RR(1./2 + sqrt(1./4 + dig*ln(10)/(pi.n(prec)*eig))))  
     
     S =  'A = %s;'%a
     S += 'B = %s;'%b
@@ -55,37 +64,10 @@ def theta_with_bound(period_matrix_entries, vec1, vec2, bound, prec = 664):
     theta=gp.eval('thetan')
     Cec=ComplexField(prec)
     return Cec(theta)
-
-def theta_without_bound(period_matrix_entries, vec1, vec2, start_bound = 20, check = False, prec = 664):
-    """
-    input:
-    period matrix entries (as a tuple of six entries)
-    vec1 and vec2 give the theta characteristic
-    start_bound gives the bound for the first rectangular box over which we will sum in the theta function
-    if check is set to True, will return all of the values obtained, not only the last, stable one
-    prec gives the precision IN BITS (which is then converted to digits for pari/gp)
-
-    This algorithm increases the size of the rectangular box over which we will sum in the theta function to see if there is convergence
-
-    output:
-    either the value of theta[vec1,vec2](period_matrix), to enough precision that increasing the box did not change the value (if check = False)
-    or as many values of theta[vec1,vec2](period_matrix) as were necessary for the value to stabilizes
-    """
-
-    values = []
-    values.append(theta_with_bound(period_matrix_entries, vec1, vec2, start_bound, prec))
-    iterates = 0
-    equality = False
-    while equality == False:
-        iterates += 1
-        values.append(theta_with_bound(period_matrix_entries, vec1, vec2, start_bound+20*iterates, prec))
-        if check:
-            print "computing iteration number {0}".format(iterates)
-            print values[iterates]
-        if compare(values[iterates],values[iterates-1],prec+10):
-            equality = True
-            
-    return values[iterates]
+    
+    
+    
+    
 
 
 def compute_characteristic_sum_from_set_and_etas(S,eta_dict):
