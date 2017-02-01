@@ -240,6 +240,20 @@ class CMPoint:
             self._U_set = Set([2,4,6])
             return self._U_set
 
+    def vareps(self, j, bound = False, epsilon = 10.^(-2)):
+        try:
+            eta_dict = self._eta_dict
+        except:
+            eta_dict = self.eta_dict(bound = bound, epsilon = epsilon)
+        v1 = eta_dict[1]-eta_dict[2]
+        v2 = eta_dict[2]
+        J = matrix(GF(2),[[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]])
+        value = v1.transpose()*J*v2
+        if value == 0:
+            return 1
+        elif value == 1:
+            return -1
+        
 
     def one_rosenhain_coeff(self, j, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
         """
@@ -282,11 +296,11 @@ class CMPoint:
                 setB = U.symmetric_difference(W.union(Set([1,2])))
                 setC = U.symmetric_difference(V.union(Set([1,j])))
                 setD = U.symmetric_difference(W.union(Set([1,j])))
-                A = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setA,eta_dict))
-                B = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setB,eta_dict))
-                C = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setC,eta_dict))
-                D = theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setD,eta_dict))
-                aj = ((A*B)^2)/((C*D)^2)
+                A = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setA,eta_dict))
+                B = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setB,eta_dict))
+                C = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setC,eta_dict))
+                D = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setD,eta_dict))
+                aj = self.vareps(j,bound,epsilon)*((A*B)^2)/((C*D)^2)
                 ajvec.append(aj)
         return ajvec
         
