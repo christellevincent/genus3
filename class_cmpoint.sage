@@ -142,13 +142,7 @@ class CMPoint:
 
         all_evens = [[[0,0,0],[0,0,0]],[[1,0,0],[0,0,0]],[[0,1,0],[0,0,0]],[[0,0,1],[0,0,0]],[[0,0,1],[1,0,0]],[[0,0,1],[0,1,0]],[[1,1,0],[0,0,0]],[[1,0,1],[0,0,0]],[[0,1,1],[0,0,0]],[[0,0,0],[1,0,1]],[[0,0,0],[0,1,1]],[[0,0,0],[1,1,0]],[[1,1,1],[0,0,0]],[[0,0,0],[1,1,1]],[[0,1,1],[1,0,0]],[[1,0,1],[0,1,0]],[[1,1,0],[0,0,1]],[[0,1,0],[1,0,1]],[[0,0,1],[1,1,0]],[[1,0,0],[0,1,1]],[[1,0,1],[1,0,1]],[[1,1,0],[1,1,0]],[[0,1,1],[0,1,1]],[[1,0,1],[1,1,1]],[[1,1,0],[1,1,1]],[[1,1,1],[0,1,1]],[[1,1,1],[1,0,1]],[[1,1,1],[1,1,0]],[[0,1,1],[1,1,1]],[[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]],[[0,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,0,1]],[[0,1,0],[0,0,1]],[[0,1,0],[1,0,0]]]
 
-        all_values = []
-
-        for even in all_evens:
-            if bound == True:
-                all_values.append([even, theta_with_bound(period_matrix,even[0],even[1],start_bound,prec)])
-            elif bound == False:
-                all_values.append([even, theta_without_bound(period_matrix,even[0],even[1],start_bound,False,prec)])
+        all_values = [[[val[0][0][1],val[0][0][2]],val[1]] for val in sorted(list(theta_function([(period_matrix,even[0],even[1],prec) for even in all_evens])))]
                 
         self._all_thetas = all_values
         return self._all_thetas

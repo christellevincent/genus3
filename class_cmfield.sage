@@ -48,9 +48,7 @@ class CMFieldfromPoly(NumberField_absolute):
         if prec == None:
             prec = self._prec
         primitives = []
-        embeddings = set(self.complex_embeddings(prec))
-        from itertools import combinations
-        all_triples = list(map(list, combinations(embeddings, 3)))
+        all_triples = Combinations(self.complex_embeddings(prec),3).list()
         for triple in all_triples:
             try:
                if is_primitive_CMtype(triple, prec):
@@ -94,14 +92,14 @@ class CMFieldfromPoly(NumberField_absolute):
             generators = [u1^2,u2^2]
             case_number = '4'
         self._generators_U_plus = generators
-        if case == False:
+        if not case:
             return self._generators_U_plus
-        elif case == True:
+        elif case:
             return [self._generators_U_plus,case_number]
 
     def unit_maker(self, tietze_list):
         """
-        In units_for_xi we use a free group to compute a quotient of unit groups. This converts an element of the free group in Tietze form to an element of the unit group
+        In units_for_xi we use a free group to compute a quotient of unit groups. This converts an element of the free group in Tietze form to an element of the unit group.
         """
         unit = self.one()
         for el in tietze_list:
@@ -151,25 +149,13 @@ class CMFieldfromPoly(NumberField_absolute):
         returns False otherwise
         """
         UK = self.unit_group()
+        zeta_ord = UK.zeta_order()
         v0, v1, v2 = UK.gens()
         conj = self.complex_conjugation()
         e10,e11,e12 = UK.log(conj(v1))
         e20,e21,e22 = UK.log(conj(v2))
-        a0,a1,a2 = UK.log(u)
-        try:
-            p = MixedIntegerLinearProgram(maximization=False, solver = "GLPK")
-            w = p.new_variable(integer=True, nonnegative=True)
-            p.add_constraint((1+e11)*w[0] + e21*w[1] == a1)
-            p.add_constraint(e12*w[0] + (1+e22)*w[1] == a2)
-            p.set_min(w[0], None)
-            p.set_min(w[1], None)
-            p.set_objective(None)
-            p.solve()
-            n1,n2 = [int(v[1]) for v in p.get_values(w).iteritems()]
-            assert n1*e10 + n2*e20 == a0
-            return True
-        except MIPSolverException:
-            return False
+        U_1  = span([[e10,e11+1,e12],[e20,e21,e22+1],[zeta_ord,0,0]],ZZ)
+        return (vector(ZZ,UK.log(u)) in U_1)
 
     def units_epsilon(self):
         """
@@ -228,9 +214,7 @@ class CMFieldfromPoly(NumberField_absolute):
     def good_generator(self,CM_type,princ_ideal):
         """
         Given a CMField K, a primitive CM type and PRINCIPAL ideal, returns b, a generator of the ideal that is totally imaginary and that has imaginary part negative under each embedding in the CM type
-        IMPORTANT: This function might fail to produce a good generator even if one exists. The generator delta might be totally imaginary, but embed into CC with a very small real part because of rounding errors. If one of the units is very large, this could make the real part of u*delta too large and fail to return this generator. One way to catch this mistake is to run the computation for all CM types in a given equivalence class.
         """
-        from sage.rings.number_field.number_field import refine_embedding
         prec = self._prec
         
         delta = princ_ideal.gens_reduced()[0]
@@ -240,16 +224,13 @@ class CMFieldfromPoly(NumberField_absolute):
         except:
             units_for_xi = self.units_for_xi()
         for u in units_for_xi:
-            #we refine the embedding to get more precision and hopefully keep the real part small
-            new_CM_type = [refine_embedding(phi,2*prec) for phi in CM_type]
-            if all([new_CM_type[i](u*delta).imag()<0 for i in range(3)]) and all([compare(new_CM_type[i](u*delta).real(),0.0,prec) for i in range(3)]):
+            if all([CM_type[i](u*delta).imag()<0 for i in range(3)]) and (u*delta) + (u*delta).conjugate() == 0:
                 return u*delta
         return None
     
     def princ_polarized(self,CM_type):
         """
         Given a CMField K and a CM-type Phi, returns a list of all pairs (ideal, xi) such that CC^3/Phi(ideal) is a principally polarized abelian variety with p.p. given by xi.
-        IMPORTANT: This might miss some pairs because of a rounding error in good_generator (see note there for more details)
         """
         all_pairs = []
         conj = self.complex_conjugation()
@@ -268,13 +249,13 @@ class CMFieldfromPoly(NumberField_absolute):
     
 def CMField(cubic,triple,prec=664):
     """
-    creates a CMField from a cubic and a triple
+    Creates a CMField from a cubic and a triple
     """
     return CMFieldfromPoly(polynomial_from_cubic_triple(cubic,triple),'a',prec)
 
 def polynomial_from_cubic_triple(cubic,triple):
     """
-    creates the optimal polynomial for a CM sextic field from a cubic and a triple
+    Creates the optimal polynomial for a CM sextic field from a cubic and a triple
     """
     k0.<d1> = NumberField(cubic)
     a0 = k0.gen()
@@ -324,7 +305,7 @@ def is_primitive_galois(phis):
     """
     Given a list of three complex embeddings of a CM sextic field with Galois group ZZ/6, checks if it is a primitive CM type
     """
-    if is_CMtype(phis) == False:
+    if not is_CMtype(phis):
         raise TypeError('This is not even a CM type')
     K = phis[0].domain()
     c = K.gen()
