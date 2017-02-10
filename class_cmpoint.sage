@@ -147,7 +147,7 @@ class CMPoint:
         Omega1 = bigmatrix[:,:3]
         Omega2 = bigmatrix[:,3:]
         Z = Omega2.inverse()*Omega1
-	    CC = ComplexField(prec)
+        CC = ComplexField(prec)
         A= CC(Z[0][0])
         B= CC(Z[0][1])
         C= CC(Z[0][2])
