@@ -6,7 +6,7 @@
 import warnings
 warnings.simplefilter("ignore", UserWarning) #In order to remove warnings when computing eigenvalues
 
-@parallel
+
 def theta_function(period_matrix, vec1, vec2, prec = 664, as_tuple = True):
     if as_tuple:
         a, b, c, d, e, f= period_matrix

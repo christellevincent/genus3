@@ -3,7 +3,10 @@
 
 //We're defining CM field and the real multiplication. f is the polynomial defining the sextic field
 P<X> := PolynomialRing(RationalField());
-//f:=X^6 + 2*X^5-2*X^3 + 7*X^2 + 8*X + 13;
+//f:=X^6 + 13*X^4 + 50*X^2 + 49;
+//f:=X^6 + 6*X^4 + 9*X^2 + 1;
+//f:=X^6 - X^5 + X^4 - X^3 + X^2 - X + 1;
+f:= X^6 + 5*X^4 + 6*X^2 + 1;
 L := NumberField(f);
 K := Subfields(L,3)[1,1]; //K=K_0
 OL := MaximalOrder(L);
@@ -21,11 +24,12 @@ end while;
 POLY<x>:=PolynomialRing(Fp);
 
 //h1,h2,h3,h4,h5 are the Rosenhain polynomials
-//h1:=x^3 + 22*x^2 - 16*x - 8;
-//h2:=x^3 - 4*x^2 + 3*x + 1;
-//h3:=(8*x^3 - 8*x^2 - 2*x + 1);
-//h4:=x^3 - 9*x^2 - x + 1;
-//h5:=x^3 + 2*x^2 - x - 1;
+h1:=2*x + 1;
+h2:=x^3 - 3*x^2 - 4*x - 1;
+h3:=x^3 + 2*x^2 - x - 1;
+h4:=x^3 + x^2 - 2*x - 1;
+h5:=x^3 + 6*x^2 + 5*x + 1;
+
 
 
 
@@ -102,11 +106,11 @@ Ns:=[];
 for i:=1 to #pis do
 N:=(1-pis[i][1])*(1-pis[i][2])*(1-pis[i][3])*(1-pis[i][4])*(1-pis[i][5])*(1-pis[i][6]);
 N:=Integers()!Round(N);
-N;
+//N;
 Include(~Ns,N);
 N:=(1+pis[i][1])*(1+pis[i][2])*(1+pis[i][3])*(1+pis[i][4])*(1+pis[i][5])*(1+pis[i][6]);
 N:=Integers()!Round(N);
-N;
+//N;
 Include(~Ns,N);
 end for;
 Ns:=[i: i in Ns];

@@ -33,7 +33,7 @@ class CMPoint:
         """
         return self._K
 
-    def period_matrix(self, test = False):
+    def old_period_matrix(self, test = False):
         """
         Set test to True to see the period matrix and the eigenvalues; can be used to check if it looks symmetric and positive definite
         """
@@ -142,7 +142,7 @@ class CMPoint:
         riemann_form = Matrix(ZZ,[[(conjugate(x)*xi*y).trace() for y in basis] for x in basis])
         symplectic_basis = Sequence(riemann_form.symplectic_form()[1]*vector(basis))
         bas=vector(symplectic_basis)
-        (redbas, M) = reduce_Siegel_epsilon(bas, Phi, True)        
+        (redbas, M) = reduce_Siegel_epsilon(bas, Phi, False)        
         bigmatrix = Matrix([[phi(b) for b in redbas] for phi in Phi])
         Omega1 = bigmatrix[:,:3]
         Omega2 = bigmatrix[:,3:]
@@ -208,13 +208,15 @@ class CMPoint:
         try:
             period_matrix = self._period_matrix
         except:
-            period_matrix = self.reduced_period_matrix()
+            #period_matrix = self.acc_period_matrix()[0]
+            period_matrix = self.reduced_period_matrix()[0]
         if prec == None:
             prec = self._prec
 
         all_evens = [[[0,0,0],[0,0,0]],[[1,0,0],[0,0,0]],[[0,1,0],[0,0,0]],[[0,0,1],[0,0,0]],[[0,0,1],[1,0,0]],[[0,0,1],[0,1,0]],[[1,1,0],[0,0,0]],[[1,0,1],[0,0,0]],[[0,1,1],[0,0,0]],[[0,0,0],[1,0,1]],[[0,0,0],[0,1,1]],[[0,0,0],[1,1,0]],[[1,1,1],[0,0,0]],[[0,0,0],[1,1,1]],[[0,1,1],[1,0,0]],[[1,0,1],[0,1,0]],[[1,1,0],[0,0,1]],[[0,1,0],[1,0,1]],[[0,0,1],[1,1,0]],[[1,0,0],[0,1,1]],[[1,0,1],[1,0,1]],[[1,1,0],[1,1,0]],[[0,1,1],[0,1,1]],[[1,0,1],[1,1,1]],[[1,1,0],[1,1,1]],[[1,1,1],[0,1,1]],[[1,1,1],[1,0,1]],[[1,1,1],[1,1,0]],[[0,1,1],[1,1,1]],[[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]],[[0,0,0],[0,0,1]],[[1,0,0],[0,1,0]],[[1,0,0],[0,0,1]],[[0,1,0],[0,0,1]],[[0,1,0],[1,0,0]]]
-
-        all_values = [[[val[0][0][1],val[0][0][2]],val[1]] for val in sorted(list(theta_function([(period_matrix,even[0],even[1],prec) for even in all_evens])))]
+        
+        all_values = [[even,theta_function(period_matrix,even[0],even[1],prec)] for even in all_evens]
+        #all_values = [[[val[0][0][1],val[0][0][2]],val[1]] for val in sorted(list(theta_function([(period_matrix,even[0],even[1],prec) for even in all_evens])))]
                 
         self._all_thetas = all_values
         return self._all_thetas
@@ -355,6 +357,7 @@ class CMPoint:
         else:
             raise ValueError('j is not between 3 and 7 inclusively')
 
+        Cec=ComplexField(prec)
         for V in X:
             if a in V:
                 W = Y.difference(V)
@@ -362,11 +365,11 @@ class CMPoint:
                 setB = U.symmetric_difference(W.union(Set([1,2])))
                 setC = U.symmetric_difference(V.union(Set([1,j])))
                 setD = U.symmetric_difference(W.union(Set([1,j])))
-                A = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setA,eta_dict))
-                B = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setB,eta_dict))
-                C = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setC,eta_dict))
-                D = theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setD,eta_dict))
-                aj = self.vareps(j,bound,epsilon)*((A*B)^2)/((C*D)^2)
+                A = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setA,eta_dict)))
+                B = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setB,eta_dict)))
+                C = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setC,eta_dict)))
+                D = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setD,eta_dict)))
+                aj = Cec(self.vareps(j,bound,epsilon)*((A*B)^2)/((C*D)^2))
                 ajvec.append(aj)
         return ajvec
         
