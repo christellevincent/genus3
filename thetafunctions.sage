@@ -82,7 +82,7 @@ def compute_characteristic_sum_from_set_and_etas(S,eta_dict):
     return sum
 
 
-def theta_from_char_and_list(all_values, eta_dict, characteristic):
+def theta_from_char_and_list(all_values, characteristic):
     """
     inputs:
     the list of all theta values computed already for a given period matrix (outputted by all_thetas)
@@ -97,14 +97,18 @@ def theta_from_char_and_list(all_values, eta_dict, characteristic):
     for i in range(2):
         for j in range(3):
             int_vec[i][j] = (double_char[i][j] - reduced_char[i][j])/2
-    eta1 = [QQ(ZZ(list(i)[0]))/2 for i in eta_dict[1]]
     int_list = list(int_vec[0]) + list(int_vec[1])
-    v1 = matrix(QQ,eta1)
+    reduced_list = list(reduced_char[0]) + list(reduced_char[1])
+    v1 = matrix(QQ,reduced_list)
     v2 = matrix(QQ,int_list)
     J = matrix(ZZ,[[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]])
     num_mat = v1*J*v2.transpose()
     num = num_mat[0][0]
-    sign = exp(2*pi*I*num_mat[0][0])
+    if num % 2 == 1:
+        sign = -1
+    elif num % 2 == 0:
+        sign = 1
+    #print sign
     for pair in all_values:
         if pair[0] == reduced_char:
             return sign*pair[1]

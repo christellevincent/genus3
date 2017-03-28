@@ -208,8 +208,8 @@ class CMPoint:
         try:
             period_matrix = self._period_matrix
         except:
-            #period_matrix = self.acc_period_matrix()[0]
-            period_matrix = self.reduced_period_matrix()[0]
+            period_matrix = self.acc_period_matrix()[0]
+            #period_matrix = self.reduced_period_matrix()[0]
         if prec == None:
             prec = self._prec
 
@@ -308,13 +308,9 @@ class CMPoint:
             self._U_set = Set([2,4,6])
             return self._U_set
 
-    def vareps(self, j, bound = False, epsilon = 10.^(-2)):
-        try:
-            eta_dict = self._eta_dict
-        except:
-            eta_dict = self.eta_dict(bound = bound, epsilon = epsilon)
-        v1 = eta_dict[1]-eta_dict[2]
-        v2 = eta_dict[2]
+    def vareps(self, j, eta_dict):
+        v1 = eta_dict[j]-eta_dict[2]
+        v2 = eta_dict[1]
         J = matrix(GF(2),[[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]])
         value = v1.transpose()*J*v2
         if value == 0:
@@ -346,32 +342,40 @@ class CMPoint:
         T = Set([1,2,3,4,5,6,7])
         S = Set([1,2,j])
         Y = T.difference(S)
-        X = Y.subsets(2)
-
-        ajvec = []
+        #X = Y.subsets(2)
+        jk = Y.subsets(2)[0]
+        D1 = jk.union(Set([j]))
+        D2 = jk.union(Set([2]))
+        
+        #ajvec = []
         # we introduce an auxiliary variable a, this only makes it so we compute the value for the decomposition given by V and W once (rather than twice, for V and W interchanged)
-        if (j >= 3) and (j <= 6):
-            a = j + 1
-        elif j == 7:
-            a = 3
-        else:
-            raise ValueError('j is not between 3 and 7 inclusively')
+        #if (j >= 3) and (j <= 6):
+        #    a = j + 1
+        #elif j == 7:
+        #    a = 3
+        #else:
+        #    raise ValueError('j is not between 3 and 7 inclusively')
 
         Cec=ComplexField(prec)
-        for V in X:
-            if a in V:
-                W = Y.difference(V)
-                setA = U.symmetric_difference(V.union(Set([1,2])))
-                setB = U.symmetric_difference(W.union(Set([1,2])))
-                setC = U.symmetric_difference(V.union(Set([1,j])))
-                setD = U.symmetric_difference(W.union(Set([1,j])))
-                A = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setA,eta_dict)))
-                B = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setB,eta_dict)))
-                C = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setC,eta_dict)))
-                D = Cec(theta_from_char_and_list(all_values, eta_dict, compute_characteristic_sum_from_set_and_etas(setD,eta_dict)))
-                aj = Cec(self.vareps(j,bound,epsilon)*((A*B)^2)/((C*D)^2))
-                ajvec.append(aj)
-        return ajvec
+        #for V in X:
+        #    if a in V:
+        #        W = Y.difference(V)
+        #        setA = U.symmetric_difference(V.union(Set([1,j]))) #was 1,2
+        #        setB = U.symmetric_difference(W.union(Set([1,j]))) #was 1,2
+        #        setC = U.symmetric_difference(V.union(Set([1,2]))) #was 1,j
+        #        setD = U.symmetric_difference(W.union(Set([1,2]))) #was 1,j
+        setA = U.symmetric_difference(D1.union(Set([1])))
+        setB = U.symmetric_difference(D2)
+        setC = U.symmetric_difference(D1)
+        setD = U.symmetric_difference(D2.union(Set([1])))
+        A = Cec(theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setA,eta_dict)))
+        B = Cec(theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setB,eta_dict)))
+        C = Cec(theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setC,eta_dict)))
+        D = Cec(theta_from_char_and_list(all_values, compute_characteristic_sum_from_set_and_etas(setD,eta_dict)))
+        aj = Cec(self.vareps(j,eta_dict)*((A*B)^2)/((C*D)^2))
+                #ajvec.append(aj)
+        #return ajvec
+        return aj
         
     def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
         """
