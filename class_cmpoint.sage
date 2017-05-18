@@ -126,6 +126,8 @@ class CMPoint:
 
         M =[A, B, C, D, E, F]
         self._period_matrix = M
+        
+        print Z
 	
         return self._period_matrix, Omega2
 
