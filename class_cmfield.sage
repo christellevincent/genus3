@@ -3,8 +3,8 @@ from sage.numerical.mip import MIPSolverException
 
 class CMFieldfromPoly(NumberField_absolute):
     
-    def __init__(self, polynomial, name, prec = 664):
-        NumberField_absolute.__init__(self, polynomial, name)
+    def __init__(self, polynomial, names, prec = 664):
+        NumberField_absolute.__init__(self, polynomial, names)
         self._prec = prec
         self._K0 = self.subfields(3)[0][0]
         self._embedK0toK = self.subfields(3)[0][1]
