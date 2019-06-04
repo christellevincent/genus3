@@ -391,7 +391,7 @@ def is_primitive_CMtype(phis, prec):
         raise TypeError('This is not even a CM type')
     K = phis[0].domain()
     G = K.galois_group(type = 'pari')
-    group = str(G.group()._pari_()[3])
+    group = str(G.group().__pari__()[3])
     #the case where G = ZZ/6
     if group =='C(6) = 6 = 3[x]2':
         return is_primitive_galois(phis)
