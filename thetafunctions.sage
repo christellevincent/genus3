@@ -90,7 +90,7 @@ def theta_from_char_and_list(all_values, characteristic):
     output:
     returns the value of theta[[a,b,c],[d,e,f]](Z)
     """
-    double_char = [[i*2 for i in characteristic[0]],[i*2 for i in characteristic[1]]]
+    double_char = [[Integer(i*2) for i in characteristic[0]],[Integer(i*2) for i in characteristic[1]]]
     reduced_char = [[i % 2 for i in double_char[0]],[i % 2 for i in double_char[1]]]
     int_vec = [[0,0,0],[0,0,0]]
     for i in range(2):

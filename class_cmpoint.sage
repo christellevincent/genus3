@@ -1,3 +1,5 @@
+load('reduced_period_matrix.sage')
+
 class CMPoint:
 
     def __init__(self, K, CM_type, ideal, xi, prec=None):
@@ -134,7 +136,7 @@ class CMPoint:
 
     def reduced_period_matrix(self, prec=None):
         """
-        This method was writte by Kilicer and Streng (see reduced_period_matrix.sage for full copyright statement)
+        This method was written by Kilicer and Streng (see reduced_period_matrix.sage for full copyright statement)
         """
 
         K = self._K   
@@ -147,7 +149,6 @@ class CMPoint:
         riemann_form = Matrix(ZZ,[[(conjugate(x)*xi*y).trace() for y in basis] for x in basis])
         symplectic_basis = Sequence(riemann_form.symplectic_form()[1]*vector(basis))
         bas=vector(symplectic_basis)
-        from reduced_period_matrix import educe_Siegel_epsilon
         (redbas, M) = reduce_Siegel_epsilon(bas, Phi, False)        
         bigmatrix = Matrix([[phi(b) for b in redbas] for phi in Phi])
         Omega1 = bigmatrix[:,:3]
@@ -214,7 +215,6 @@ class CMPoint:
         try:
             period_matrix = self._period_matrix
         except:
-            from period_matrices_genus3 import 
             #period_matrix = self.acc_period_matrix()[0]
             period_matrix = self.reduced_period_matrix()[0]
         if prec == None:
