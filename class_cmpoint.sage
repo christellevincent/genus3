@@ -1,3 +1,10 @@
+"""
+
+This is the latest version of the code computing the Rosenhain invariants, with the sign corrected.
+
+"""
+
+
 load('reduced_period_matrix.sage')
 
 class CMPoint:
