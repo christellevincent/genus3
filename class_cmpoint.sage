@@ -319,7 +319,7 @@ class CMPoint:
             return 1
         elif value == 1:
             return -1
-        
+
 
     def one_rosenhain_coeff(self, j, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
         """

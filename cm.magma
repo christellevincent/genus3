@@ -3,10 +3,13 @@
 
 //We're defining CM field and the real multiplication. f is the polynomial defining the sextic field
 P<X> := PolynomialRing(RationalField());
+
 //f:=X^6 + 13*X^4 + 50*X^2 + 49;
 //f:=X^6 + 6*X^4 + 9*X^2 + 1;
 //f:=X^6 - X^5 + X^4 - X^3 + X^2 - X + 1;
+//f:=X^6 + 12*X^5 + 39*X^4 + 62*X^3 + 744*X^2 - 228*X + 3473;
 f:= X^6 + 5*X^4 + 6*X^2 + 1;
+
 L := NumberField(f);
 K := Subfields(L,3)[1,1]; //K=K_0
 OL := MaximalOrder(L);

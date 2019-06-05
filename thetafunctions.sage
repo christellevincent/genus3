@@ -69,16 +69,16 @@ def theta_function(period_matrix, vec1, vec2, prec = 664, as_tuple = True):
 def compute_characteristic_sum_from_set_and_etas(S,eta_dict):
     """
     Given a dictionary of values eta_1, eta_2, ... eta_7 (giving a map eta), computes eta_S = sum_{i in S} eta_i
-    Returns a list [[a,b,c],[d,e,f]], a,b,c,d,e,f are in QQ
+    Returns a list [[a,b,c],[d,e,f]]
     """
     sum = [[0,0,0],[0,0,0]]
     for i in S:
-        sum[0][0] += QQ(ZZ(eta_dict[i][0][0])/2)
-        sum[0][1] += QQ(ZZ(eta_dict[i][1][0])/2)
-        sum[0][2] += QQ(ZZ(eta_dict[i][2][0])/2)
-        sum[1][0] += QQ(ZZ(eta_dict[i][3][0])/2)
-        sum[1][1] += QQ(ZZ(eta_dict[i][4][0])/2)
-        sum[1][2] += QQ(ZZ(eta_dict[i][5][0])/2)
+        sum[0][0] += eta_dict[i][0][0]
+        sum[0][1] += eta_dict[i][1][0]
+        sum[0][2] += eta_dict[i][2][0]
+        sum[1][0] += eta_dict[i][3][0]
+        sum[1][1] += eta_dict[i][4][0]
+        sum[1][2] += eta_dict[i][5][0]
     return sum
 
 
@@ -86,7 +86,6 @@ def theta_from_char_and_list(all_values, characteristic):
     """
     inputs:
     the list of all theta values computed already for a given period matrix (outputted by all_thetas)
-    eta_dict
     a vector [[a,b,c],[d,e,f]] obtained via compute_characteristic_sum_from_set_and_etas
     output:
     returns the value of theta[[a,b,c],[d,e,f]](Z)
@@ -108,7 +107,6 @@ def theta_from_char_and_list(all_values, characteristic):
         sign = -1
     elif num % 2 == 0:
         sign = 1
-    #print sign
     for pair in all_values:
         if pair[0] == reduced_char:
             return sign*pair[1]
