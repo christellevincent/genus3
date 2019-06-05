@@ -1,10 +1,3 @@
-"""
-
-This is the latest version of the code computing the Rosenhain invariants, with the sign corrected.
-
-"""
-
-
 class CMPoint:
 
     def __init__(self, K, CM_type, ideal, xi, prec=None):
