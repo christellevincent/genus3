@@ -335,7 +335,7 @@ class CMPoint:
 
     def one_rosenhain_coeff(self, j, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
         """
-        This function computes the Rosenhain coefficient j, with 3 <= j <= 7. We assume a1 = 0, a2 = 1. Three values are computed, for the three ways in which you can split the set in Takase's paper. This serves as an additional check that the period matrix is truly hyperelliptic.
+        This function computes the Rosenhain coefficient j, with 3 <= j <= 7. We assume a1 = 0, a2 = 1.
         """
         try:
             eta_dict = self._eta_dict
@@ -356,28 +356,12 @@ class CMPoint:
         T = Set([1,2,3,4,5,6,7])
         S = Set([1,2,j])
         Y = T.difference(S)
-        #X = Y.subsets(2)
         jk = Y.subsets(2)[0]
         D1 = jk.union(Set([j]))
         D2 = jk.union(Set([2]))
         
-        #ajvec = []
-        # we introduce an auxiliary variable a, this only makes it so we compute the value for the decomposition given by V and W once (rather than twice, for V and W interchanged)
-        #if (j >= 3) and (j <= 6):
-        #    a = j + 1
-        #elif j == 7:
-        #    a = 3
-        #else:
-        #    raise ValueError('j is not between 3 and 7 inclusively')
 
         Cec=ComplexField(prec)
-        #for V in X:
-        #    if a in V:
-        #        W = Y.difference(V)
-        #        setA = U.symmetric_difference(V.union(Set([1,j]))) #was 1,2
-        #        setB = U.symmetric_difference(W.union(Set([1,j]))) #was 1,2
-        #        setC = U.symmetric_difference(V.union(Set([1,2]))) #was 1,j
-        #        setD = U.symmetric_difference(W.union(Set([1,2]))) #was 1,j
         setA = U.symmetric_difference(D1.union(Set([1])))
         setB = U.symmetric_difference(D2)
         setC = U.symmetric_difference(D1)
@@ -391,7 +375,7 @@ class CMPoint:
         #return ajvec
         return aj
         
-    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = False, epsilon = 10.^(-2)):
+    def all_rosenhain_coeffs(self, prec = None, start_bound = 20, bound = False, epsilon = 0.001):
         """
         returns all of the vectors of Rosenhain coefficients
         """
